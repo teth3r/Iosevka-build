@@ -15,8 +15,6 @@ print_error() {
 for primary_options in "${@:1}"; do
 	case "$primary_options" in
 		-h | --help)
-			echo -e "$script_name (C) 2023, Kolade Ayomide Olanrewaju (tether)"
-			echo -e "$script_name is Licensed under GPL-3.0-or-later. See <https://www.gnu.org/licenses/> for detailed copyright notices.\n"
 			echo -e "Usage:    $script_name [OPTION]\n"
 			echo -e "Examples: $script_name"
 			echo -e "          $script_name --help\n"
