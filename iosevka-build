@@ -1,0 +1,150 @@
+#!/bin/env bash
+
+# Set the name of this script
+script_name="${0##*/}"
+
+# Set the version of this script
+script_version="23.12.18.1419"
+
+# Print out error message
+print_error() {
+	echo -e "\033[1;97m[\033[1;31m-\033[1;97m] $@ \033[00m"
+}
+
+# Handle input options
+for primary_options in "${@:1}"; do
+	case "$primary_options" in
+		-h | --help)
+			echo -e "$script_name (C) 2023, Kolade Ayomide Olanrewaju (tether)"
+			echo -e "$script_name is Licensed under GPL-3.0-or-later. See <https://www.gnu.org/licenses/> for detailed copyright notices.\n"
+			echo -e "Usage:    $script_name [OPTION]\n"
+			echo -e "Examples: $script_name"
+			echo -e "          $script_name --help\n"
+			echo -e "Options: -h, --help     Print out this message"
+			echo -e "         -V, --version  Show version information\n"
+			echo -e "Simple script to build Iosevka with custom config"
+			exit 0
+		;;
+		-V | --version)
+			echo -e "${script_name} ${script_version}-${HOSTTYPE}"
+			exit 0
+		;;
+		-*)
+			[[ -z ${primary_options#*\-} || -z ${primary_options/\-\-*} ]] && {
+				print_error "Invalid option '${primary_options}'"
+				exit 1
+			}
+			print_error "Invalid option -- '${primary_options#*\-}'"
+			exit 1
+		;;
+		*)
+			print_error "Invalid option '${primary_options}'"
+			exit 1
+		;;
+	esac
+done
+
+# Only run as non-root user
+[[ $EUID -eq 0 ]] && {
+	print_error "Running as non-root user is not supported" &&
+	exit 1
+}
+
+# Only run if installed ram >= 12GB
+mem_total="$(cat /proc/meminfo)"
+mem_total="${mem_total//kB*}"
+mem_total="${mem_total//*MemTotal:}"
+mem_total="${mem_total//[[:space:]]}"
+
+[[ $mem_total -lt 12582912 ]] && {
+	print_error "Installed RAM is insufficient for build"
+	exit 1
+}
+
+# Save current dir
+current_dir="$PWD"
+
+# Check for internet connectivity
+[[ ! $(ping -c4 voidlinux.org 2>/dev/null) ]] && {
+	print_error "Network isn't ready yet"
+	exit 1
+}
+
+# Check build deps
+for deps in npm ttfautohint git; do 
+	[[ ! $(type -p $deps) ]] && {
+		print_error "$deps is not installed"
+		exit 1
+	}
+done
+
+cd ~/Downloads || exit 1
+
+[[ -d ~/Downloads/Iosevka ]] && rm -rf ~/Downloads/Iosevka 
+
+# Clone repo
+git clone --depth 1 https://github.com/be5invis/Iosevka.git
+
+# Add custom build plans
+cat << "EOF" > Iosevka/private-build-plans.toml
+[buildPlans.Iosevka]
+family = "Iosevka"
+spacing = "normal"
+serifs = "sans"
+noCvSs = true
+exportGlyphNames = true
+
+[buildPlans.Iosevka.variants.design]
+y = "cursive-serifless"
+six = "closed-contour"
+nine = "closed-contour"
+
+[buildPlans.Iosevka.variants.italic]
+y = "cursive-serifless"
+six = "closed-contour"
+nine = "closed-contour"
+
+  [buildPlans.Iosevka.ligations]
+  inherits = "dlig"
+
+[buildPlans.Iosevka.weights.Regular]
+shape = 400
+menu = 400
+css = 400
+
+[buildPlans.Iosevka.weights.Bold]
+shape = 700
+menu = 700
+css = 700
+
+[buildPlans.Iosevka.widths.Normal]
+shape = 500
+menu = 5
+css = "normal"
+
+[buildPlans.Iosevka.slopes.Upright]
+angle = 0
+shape = "upright"
+menu = "upright"
+css = "normal"
+
+[buildPlans.Iosevka.slopes.Italic]
+angle = 9.4
+shape = "italic"
+menu = "italic"
+css = "italic"
+EOF
+
+
+cd ~/Downloads/Iosevka || exit 1
+
+npm install &&
+
+npm run build -- ttf::Iosevka &&
+
+echo -e "\n\033[1;97m[\033[1;32m+\033[1;97m] Done building Iosevka \033[00m"
+echo -e "    Check '~/Downloads/Iosevka/dist/Iosevka'"
+
+cd "$current_dir" || exit 1
+
+exit 0
