@@ -4,7 +4,7 @@
 script_name="${0##*/}"
 
 # Set the version of this script
-script_version="23.12.19.1633"
+script_version="2024.01.01.1758"
 
 # Print out error message
 print_error() {
