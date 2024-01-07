@@ -4,7 +4,7 @@
 script_name="${0##*/}"
 
 # Set the version of this script
-script_version="2024.01.01.1758"
+script_version="2024.01.07.1925"
 
 # Print out error message
 print_error() {
@@ -48,13 +48,13 @@ done
 	exit 1
 }
 
-# Only run if installed ram >= 12GB
+# Only run if installed ram >= 7.2GB
 mem_total="$(cat /proc/meminfo)"
 mem_total="${mem_total//kB*}"
 mem_total="${mem_total//*MemTotal:}"
 mem_total="${mem_total//[[:space:]]}"
 
-[[ $mem_total -lt 12582912 ]] && {
+[[ $mem_total -lt 7549747 ]] && {
 	print_error "Installed RAM is insufficient for build"
 	exit 1
 }
@@ -69,7 +69,7 @@ current_dir="$PWD"
 }
 
 # Check build deps
-for deps in npm ttfautohint git; do 
+for deps in npm ttfautohint git; do
 	[[ ! $(type -p $deps) ]] && {
 		print_error "$deps is not installed"
 		exit 1
@@ -140,7 +140,7 @@ npm install &&
 
 npm run build -- ttf::Iosevka &&
 
-echo -e "\n\033[1;97m[\033[1;32m+\033[1;97m] Done building Iosevka \033[00m"
+echo -e "\n\n\033[1;97m[\033[1;32m+\033[1;97m] Done building Iosevka \033[00m"
 echo -e "    Check '~/Downloads/Iosevka/dist/Iosevka'"
 
 cd "$current_dir" || exit 1
